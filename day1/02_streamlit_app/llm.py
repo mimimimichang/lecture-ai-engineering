@@ -1,7 +1,7 @@
 # llm.py
 import os
 import torch
-from transformers import pipeline
+from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import streamlit as st
 import time
 from config import MODEL_NAME
@@ -18,12 +18,38 @@ def load_model():
         
         device = "cuda" if torch.cuda.is_available() else "cpu"
         st.info(f"Using device: {device}") # 使用デバイスを表示
+
+        # 4-bit量子化の設定
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_use_double_quant=True
+        )
+
+        # モデルとトークナイザのロード
+        model = AutoModelForCausalLM.from_pretrained(
+            MODEL_NAME,
+            quantization_config=quantization_config,
+            torch_dtype=torch.bfloat16,
+            device_map="auto",
+            token=hf_token
+        )
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, token=hf_token)
+
+        # パイプラインの設定
         pipe = pipeline(
             "text-generation",
-            model=MODEL_NAME,
+            model=model,
+            tokenizer=tokenizer,
             model_kwargs={"torch_dtype": torch.bfloat16},
-            device=device
+            device_map="auto",
+            max_new_tokens=512,
+            do_sample=True,
+            temperature=0.7,
+            top_p=0.9
         )
+
         st.success(f"モデル '{MODEL_NAME}' の読み込みに成功しました。")
         return pipe
     except Exception as e:
