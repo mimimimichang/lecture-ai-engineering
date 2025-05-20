@@ -171,3 +171,65 @@ def test_model_reproducibility(sample_data, preprocessor):
     assert np.array_equal(
         predictions1, predictions2
     ), "モデルの予測結果に再現性がありません"
+
+
+def test_model_accuracy_comparison_with_base(train_model):
+    """現在のモデルとBaseモデルの精度比較"""
+    current_model, X_test, y_test = train_model
+
+    # Baseモデルの読み込み
+    base_model_path = os.path.join(MODEL_DIR, "titanic_model_base.pkl")
+    if not os.path.exists(base_model_path):
+        pytest.skip("Baseモデルが存在しないためスキップします")
+    assert os.path.exists(base_model_path), "Baseモデルファイルが存在しません"
+
+    with open(base_model_path, "rb") as f:
+        base_model = pickle.load(f)
+
+    # 現在のモデルの評価
+    current_pred = current_model.predict(X_test)
+    current_accuracy = accuracy_score(y_test, current_pred)
+
+    # Baseモデルの評価
+    base_pred = base_model.predict(X_test)
+    base_accuracy = accuracy_score(y_test, base_pred)
+
+    print(f"\n  現在のモデル - 精度: {current_accuracy:.4f}")
+    print(f"  Baseモデル - 精度: {base_accuracy:.4f}")
+
+    # 精度がBaseモデル以上であることを確認
+    assert (
+        current_accuracy >= base_accuracy
+    ), f"現在のモデルの精度がBaseモデルを下回っています: {current_accuracy} < {base_accuracy}"
+
+
+def test_model_inference_time_comparison_with_base(train_model):
+    """現在のモデルとBaseモデルの推論時間比較"""
+    current_model, X_test, _ = train_model
+
+    # Baseモデルの読み込み
+    base_model_path = os.path.join(MODEL_DIR, "titanic_model_base.pkl")
+    if not os.path.exists(base_model_path):
+        pytest.skip("Baseモデルが存在しないためスキップします")
+    assert os.path.exists(base_model_path), "Baseモデルファイルが存在しません"
+
+    with open(base_model_path, "rb") as f:
+        base_model = pickle.load(f)
+
+    # 現在のモデルの推論時間計測
+    current_start_time = time.time()
+    current_model.predict(X_test)
+    current_inference_time = time.time() - current_start_time
+
+    # Baseモデルの推論時間計測
+    base_start_time = time.time()
+    base_model.predict(X_test)
+    base_inference_time = time.time() - base_start_time
+
+    print(f"\n  現在のモデル - 推論時間: {current_inference_time:.4f}秒")
+    print(f"  Baseモデル - 推論時間: {base_inference_time:.4f}秒")
+
+    # 推論時間がBaseモデルの1.2倍以内であることを確認
+    assert (
+        current_inference_time <= base_inference_time * 1.2
+    ), f"現在のモデルの推論時間がBaseモデルの1.2倍を超えています: {current_inference_time} > {base_inference_time * 1.2}"
