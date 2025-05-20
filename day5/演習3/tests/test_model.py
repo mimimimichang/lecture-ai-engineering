@@ -198,7 +198,9 @@ def test_model_accuracy_comparison_with_base(train_model):
     print(f"  Baseモデル - 精度: {base_accuracy:.4f}")
 
     # 精度がBaseモデル以上であることを確認
-    assert current_accuracy >= base_accuracy, f"現在のモデルの精度がBaseモデルを下回っています: {current_accuracy} < {base_accuracy}"
+    assert (
+        current_accuracy >= base_accuracy
+    ), f"現在のモデルの精度がBaseモデルを下回っています: {current_accuracy} < {base_accuracy}"
 
 
 def test_model_inference_time_comparison_with_base(train_model):
@@ -228,4 +230,6 @@ def test_model_inference_time_comparison_with_base(train_model):
     print(f"  Baseモデル - 推論時間: {base_inference_time:.4f}秒")
 
     # 推論時間がBaseモデルの1.2倍以内であることを確認
-    assert current_inference_time <= base_inference_time * 1.2, f"現在のモデルの推論時間がBaseモデルの1.2倍を超えています: {current_inference_time} > {base_inference_time * 1.2}"
+    assert (
+        current_inference_time <= base_inference_time * 1.2
+    ), f"現在のモデルの推論時間がBaseモデルの1.2倍を超えています: {current_inference_time} > {base_inference_time * 1.2}"
